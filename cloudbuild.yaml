@@ -1,0 +1,72 @@
+# Cloud Build Configuration for AI Chatbot
+# This file defines the build and deployment process for Cloud Run
+
+# Build steps
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/chatbot-repo/chatbot:latest'
+      - '.'
+    timeout: 600s
+
+  # Step 2: Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/chatbot-repo/chatbot:latest'
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'chatbot'
+      - '--image'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/chatbot-repo/chatbot:latest'
+      - '--region'
+      - 'asia-northeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-secrets'
+      - 'ANTHROPIC_API_KEY=anthropic-api-key:latest'
+      - '--set-env-vars'
+      - 'NODE_ENV=production'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '60'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '10'
+
+# Images to be pushed to registry
+images:
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/chatbot-repo/chatbot:latest'
+
+# Build options
+options:
+  # Use a larger machine type for faster builds
+  machineType: 'E2_HIGHCPU_8'
+
+  # Increase disk size if needed
+  diskSizeGb: 100
+
+  # Enable logging
+  logging: CLOUD_LOGGING_ONLY
+
+# Build timeout (10 minutes)
+timeout: 600s
+
+# Tags for organization
+tags:
+  - 'chatbot'
+  - 'cloud-run'
+  - 'production'

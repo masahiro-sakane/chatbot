@@ -1,0 +1,247 @@
+# AIチャットボット - PowerShellスクリプト
+# Windows環境用の開発・ビルド・デプロイスクリプト
+
+param(
+    [Parameter(Position=0)]
+    [string]$Command = "help"
+)
+
+function Show-Help {
+    Write-Host "利用可能なコマンド:" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "開発コマンド:" -ForegroundColor Yellow
+    Write-Host "  .\scripts.ps1 install        - 依存関係をインストール（初期化）"
+    Write-Host "  .\scripts.ps1 setup          - 初期セットアップ"
+    Write-Host "  .\scripts.ps1 dev-backend    - バックエンドのみ起動"
+    Write-Host "  .\scripts.ps1 dev-frontend   - フロントエンドのみ起動"
+    Write-Host ""
+    Write-Host "ビルドコマンド:" -ForegroundColor Yellow
+    Write-Host "  .\scripts.ps1 build          - プロダクションビルド"
+    Write-Host "  .\scripts.ps1 build-backend  - バックエンドのみビルド"
+    Write-Host "  .\scripts.ps1 build-frontend - フロントエンドのみビルド"
+    Write-Host ""
+    Write-Host "Dockerコマンド:" -ForegroundColor Yellow
+    Write-Host "  .\scripts.ps1 docker-build   - Dockerイメージをビルド"
+    Write-Host "  .\scripts.ps1 docker-run     - Dockerコンテナを起動"
+    Write-Host "  .\scripts.ps1 docker-stop    - Dockerコンテナを停止"
+    Write-Host "  .\scripts.ps1 docker-logs    - Dockerコンテナのログを表示"
+    Write-Host "  .\scripts.ps1 docker-clean   - Dockerコンテナとイメージを削除"
+    Write-Host ""
+    Write-Host "その他:" -ForegroundColor Yellow
+    Write-Host "  .\scripts.ps1 clean          - ビルド成果物を削除"
+    Write-Host "  .\scripts.ps1 clean-all      - node_modulesも含めて削除"
+    Write-Host "  .\scripts.ps1 check-env      - 環境変数の確認"
+    Write-Host ""
+    Write-Host "開発サーバー起動には2つのターミナルが必要です:" -ForegroundColor Cyan
+    Write-Host "  ターミナル1: .\scripts.ps1 dev-backend"
+    Write-Host "  ターミナル2: .\scripts.ps1 dev-frontend"
+}
+
+function Install-Dependencies {
+    Write-Host "=== 依存関係をインストール中 ===" -ForegroundColor Green
+
+    Write-Host "バックエンドの依存関係をインストール..."
+    Set-Location backend
+    npm install
+    Set-Location ..
+
+    Write-Host "フロントエンドの依存関係をインストール..."
+    Set-Location frontend
+    npm install
+    Set-Location ..
+
+    Write-Host "=== インストール完了 ===" -ForegroundColor Green
+}
+
+function Start-Backend {
+    Write-Host "=== バックエンド起動中 (http://localhost:3001) ===" -ForegroundColor Green
+    Set-Location backend
+    npm run dev
+}
+
+function Start-Frontend {
+    Write-Host "=== フロントエンド起動中 (http://localhost:5173) ===" -ForegroundColor Green
+    Set-Location frontend
+    npm run dev
+}
+
+function Build-All {
+    Build-Backend
+    Build-Frontend
+    Write-Host "=== ビルド完了 ===" -ForegroundColor Green
+}
+
+function Build-Backend {
+    Write-Host "=== バックエンドをビルド中 ===" -ForegroundColor Green
+    Set-Location backend
+    npm run build
+    Set-Location ..
+    Write-Host "=== バックエンドビルド完了 (backend/dist/) ===" -ForegroundColor Green
+}
+
+function Build-Frontend {
+    Write-Host "=== フロントエンドをビルド中 ===" -ForegroundColor Green
+    Set-Location frontend
+    npm run build
+    Set-Location ..
+    Write-Host "=== フロントエンドビルド完了 (frontend/dist/) ===" -ForegroundColor Green
+}
+
+function Clean-Build {
+    Write-Host "=== ビルド成果物を削除中 ===" -ForegroundColor Yellow
+
+    if (Test-Path "backend\dist") {
+        Remove-Item -Recurse -Force "backend\dist"
+        Write-Host "backend\dist を削除しました"
+    }
+
+    if (Test-Path "frontend\dist") {
+        Remove-Item -Recurse -Force "frontend\dist"
+        Write-Host "frontend\dist を削除しました"
+    }
+
+    Write-Host "=== クリーンアップ完了 ===" -ForegroundColor Green
+}
+
+function Clean-All {
+    Write-Host "=== 全てのビルド成果物とnode_modulesを削除中 ===" -ForegroundColor Yellow
+
+    Clean-Build
+
+    if (Test-Path "backend\node_modules") {
+        Remove-Item -Recurse -Force "backend\node_modules"
+        Write-Host "backend\node_modules を削除しました"
+    }
+
+    if (Test-Path "frontend\node_modules") {
+        Remove-Item -Recurse -Force "frontend\node_modules"
+        Write-Host "frontend\node_modules を削除しました"
+    }
+
+    Write-Host "=== クリーンアップ完了 ===" -ForegroundColor Green
+}
+
+function Check-Environment {
+    Write-Host "=== 環境変数チェック ===" -ForegroundColor Cyan
+
+    if (Test-Path "backend\.env") {
+        Write-Host "✓ backend\.env が存在します" -ForegroundColor Green
+    } else {
+        Write-Host "✗ backend\.env が見つかりません" -ForegroundColor Red
+        Write-Host "  backend\.env.example をコピーして設定してください" -ForegroundColor Yellow
+    }
+
+    if (Test-Path "frontend\.env") {
+        Write-Host "✓ frontend\.env が存在します" -ForegroundColor Green
+    } else {
+        Write-Host "✗ frontend\.env が見つかりません" -ForegroundColor Red
+        Write-Host "  frontend\.env.example をコピーして設定してください" -ForegroundColor Yellow
+    }
+}
+
+function Setup-Environment {
+    Write-Host "=== 開発環境のセットアップ ===" -ForegroundColor Green
+
+    Install-Dependencies
+
+    if (-not (Test-Path "backend\.env")) {
+        Copy-Item "backend\.env.example" "backend\.env"
+        Write-Host "backend\.env を作成しました。ANTHROPIC_API_KEY を設定してください。" -ForegroundColor Yellow
+    }
+
+    if (-not (Test-Path "frontend\.env")) {
+        Copy-Item "frontend\.env.example" "frontend\.env"
+        Write-Host "frontend\.env を作成しました。" -ForegroundColor Green
+    }
+
+    Write-Host "=== セットアップ完了 ===" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "次のステップ:" -ForegroundColor Cyan
+    Write-Host "1. backend\.env にANTHROPIC_API_KEYを設定"
+    Write-Host "2. .\scripts.ps1 dev-backend (ターミナル1)"
+    Write-Host "3. .\scripts.ps1 dev-frontend (ターミナル2)"
+}
+
+function Docker-Build {
+    Write-Host "=== Dockerイメージをビルド中 ===" -ForegroundColor Green
+    docker build -t chatbot:latest .
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "=== ビルド完了 ===" -ForegroundColor Green
+        Write-Host "イメージ名: chatbot:latest"
+    } else {
+        Write-Host "=== ビルド失敗 ===" -ForegroundColor Red
+    }
+}
+
+function Docker-Run {
+    Write-Host "=== Dockerコンテナを起動中 ===" -ForegroundColor Green
+
+    # .envファイルからAPIキーを読み込む
+    if (Test-Path ".env") {
+        $apiKey = (Get-Content ".env" | Select-String "ANTHROPIC_API_KEY").ToString().Split("=")[1]
+    } else {
+        Write-Host "警告: .env ファイルが見つかりません" -ForegroundColor Yellow
+        $apiKey = Read-Host "ANTHROPIC_API_KEYを入力してください"
+    }
+
+    docker run -d `
+        -p 3001:3001 `
+        -e ANTHROPIC_API_KEY=$apiKey `
+        -e NODE_ENV=production `
+        --name chatbot `
+        chatbot:latest
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "=== コンテナ起動完了 ===" -ForegroundColor Green
+        Write-Host "アクセス: http://localhost:3001"
+        Write-Host "ログ確認: .\scripts.ps1 docker-logs"
+        Write-Host "停止: .\scripts.ps1 docker-stop"
+    } else {
+        Write-Host "=== 起動失敗 ===" -ForegroundColor Red
+    }
+}
+
+function Docker-Stop {
+    Write-Host "=== Dockerコンテナを停止中 ===" -ForegroundColor Yellow
+    docker stop chatbot
+    docker rm chatbot
+    Write-Host "=== コンテナ停止完了 ===" -ForegroundColor Green
+}
+
+function Docker-Logs {
+    Write-Host "=== Dockerコンテナのログ ===" -ForegroundColor Cyan
+    docker logs -f chatbot
+}
+
+function Docker-Clean {
+    Write-Host "=== Dockerコンテナとイメージを削除中 ===" -ForegroundColor Yellow
+    docker stop chatbot 2>$null
+    docker rm chatbot 2>$null
+    docker rmi chatbot:latest 2>$null
+    Write-Host "=== クリーンアップ完了 ===" -ForegroundColor Green
+}
+
+# コマンド実行
+switch ($Command.ToLower()) {
+    "help" { Show-Help }
+    "install" { Install-Dependencies }
+    "dev-backend" { Start-Backend }
+    "dev-frontend" { Start-Frontend }
+    "build" { Build-All }
+    "build-backend" { Build-Backend }
+    "build-frontend" { Build-Frontend }
+    "clean" { Clean-Build }
+    "clean-all" { Clean-All }
+    "check-env" { Check-Environment }
+    "setup" { Setup-Environment }
+    "docker-build" { Docker-Build }
+    "docker-run" { Docker-Run }
+    "docker-stop" { Docker-Stop }
+    "docker-logs" { Docker-Logs }
+    "docker-clean" { Docker-Clean }
+    default {
+        Write-Host "不明なコマンド: $Command" -ForegroundColor Red
+        Write-Host ""
+        Show-Help
+    }
+}

@@ -1,9 +1,29 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git init:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(npm install:*)",
+      "Bash(gcloud config get-value:*)",
+      "Bash(gcloud services enable:*)",
+      "Bash(gcloud artifacts repositories create:*)",
+      "Bash(gcloud secrets:*)",
+      "Bash(gcloud builds submit:*)",
+      "Bash(gcloud builds log:*)",
+      "Bash(gcloud run services describe:*)",
+      "Bash(curl:*)",
+      "Bash(gcloud run services add-iam-policy-binding:*)",
+      "Bash(gcloud run services logs read:*)",
+      "Bash(gcloud run services update:*)",
+      "Bash(gcloud logging read:*)",
+      "Bash(gcloud run services delete:*)",
+      "Bash(gcloud artifacts repositories delete:*)",
+      "Bash(gsutil:*)",
+      "Bash(gcloud run services list:*)",
+      "Bash(gcloud artifacts repositories list:*)",
+      "Bash(gh:*)",
+      "Bash(test:*)",
+      "Bash(git add:*)"
     ]
   }
 }

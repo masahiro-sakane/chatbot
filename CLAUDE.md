@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+必ず日本語で回答をして下さい。
+
 ## プロジェクト概要
 
 汎用的なAI会話ボットのWebアプリケーション。Claude API (Anthropic)を使用し、ユーザーと自然な対話を提供します。
