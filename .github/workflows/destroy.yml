@@ -43,51 +43,27 @@ jobs:
             echo "Cloud Run service ${{ env.SERVICE_NAME }} does not exist"
           fi
 
-      - name: Delete Docker images from Artifact Registry
-        run: |
-          if gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
-              --location=${{ env.REGION }} 2>/dev/null; then
-            echo "Deleting all images in repository: ${{ env.REPOSITORY }}"
-
-            # リポジトリ内のすべてのイメージを取得して削除
-            IMAGES=$(gcloud artifacts docker images list \
-              ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }} \
-              --format="value(package)" 2>/dev/null || echo "")
-
-            if [ -n "$IMAGES" ]; then
-              for IMAGE in $IMAGES; do
-                echo "Deleting image: $IMAGE"
-                gcloud artifacts docker images delete \
-                  ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$IMAGE \
-                  --delete-tags \
-                  --quiet 2>/dev/null || echo "Failed to delete $IMAGE (may not exist)"
-              done
-            fi
-
-            echo "✓ Docker images deleted"
-          else
-            echo "Artifact Registry repository ${{ env.REPOSITORY }} does not exist"
-          fi
-
       - name: Delete Artifact Registry repository
+        continue-on-error: true
         run: |
           if gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
               --location=${{ env.REGION }} 2>/dev/null; then
-            echo "Deleting Artifact Registry repository: ${{ env.REPOSITORY }}"
+            echo "Deleting Artifact Registry repository (including all images): ${{ env.REPOSITORY }}"
             gcloud artifacts repositories delete ${{ env.REPOSITORY }} \
               --location=${{ env.REGION }} \
-              --quiet
-            echo "✓ Artifact Registry repository deleted"
+              --quiet || echo "⚠ Failed to delete repository via GitHub Actions"
+            echo "✓ Artifact Registry repository deletion attempted"
           else
             echo "Artifact Registry repository ${{ env.REPOSITORY }} does not exist"
           fi
 
       - name: Delete Secret Manager secret
+        continue-on-error: true
         run: |
           if gcloud secrets describe anthropic-api-key 2>/dev/null; then
             echo "Deleting Secret Manager secret: anthropic-api-key"
-            gcloud secrets delete anthropic-api-key --quiet
-            echo "✓ Secret Manager secret deleted"
+            gcloud secrets delete anthropic-api-key --quiet || echo "⚠ Failed to delete secret via GitHub Actions"
+            echo "✓ Secret Manager secret deletion attempted"
           else
             echo "Secret Manager secret anthropic-api-key does not exist"
           fi
@@ -96,12 +72,16 @@ jobs:
         run: |
           echo ""
           echo "=== Deletion Summary ==="
-          echo "✓ All Google Cloud resources have been deleted:"
+          echo "Attempted to delete the following Google Cloud resources:"
           echo "  - Cloud Run service: ${{ env.SERVICE_NAME }}"
           echo "  - Artifact Registry repository: ${{ env.REPOSITORY }}"
-          echo "  - Docker images in repository"
           echo "  - Secret Manager secret: anthropic-api-key"
           echo ""
-          echo "Note: Workload Identity Federation resources are NOT deleted."
-          echo "If you want to delete them too, run:"
-          echo "  ./scripts/cleanup-github-actions.sh"
+          echo "⚠ Note: If some deletions failed due to IAM permissions,"
+          echo "   please run the following commands locally:"
+          echo ""
+          echo "gcloud artifacts repositories delete ${{ env.REPOSITORY }} --location=${{ env.REGION }} --quiet"
+          echo "gcloud secrets delete anthropic-api-key --quiet"
+          echo ""
+          echo "Workload Identity Federation resources are NOT deleted."
+          echo "To delete them, run: ./scripts/cleanup-github-actions.sh"
