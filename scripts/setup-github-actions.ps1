@@ -9,7 +9,7 @@ $SERVICE_ACCOUNT_NAME = "github-actions-sa"
 $SERVICE_ACCOUNT_EMAIL = "${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 $WORKLOAD_IDENTITY_POOL = "github-actions-pool"
 $WORKLOAD_IDENTITY_PROVIDER = "github-actions-provider"
-$GITHUB_REPO = "YOUR_GITHUB_USERNAME/YOUR_REPO_NAME"  # 例: "octocat/my-repo"
+$GITHUB_REPO = "masahiro-sakane/chatbot"  # GitHubリポジトリ
 
 Write-Host "=== GitHub Actions Workload Identity Federation セットアップ ===" -ForegroundColor Cyan
 Write-Host ""
