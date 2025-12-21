@@ -1,0 +1,107 @@
+name: Destroy Google Cloud Resources
+
+on:
+  workflow_dispatch:  # 手動実行のみ
+
+env:
+  PROJECT_ID: chatbot-481505
+  REGION: asia-northeast1
+  SERVICE_NAME: chatbot
+  REPOSITORY: chatbot-repo
+
+jobs:
+  destroy:
+    name: Delete Google Cloud Resources
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Delete Cloud Run service
+        run: |
+          if gcloud run services describe ${{ env.SERVICE_NAME }} --region ${{ env.REGION }} 2>/dev/null; then
+            echo "Deleting Cloud Run service: ${{ env.SERVICE_NAME }}"
+            gcloud run services delete ${{ env.SERVICE_NAME }} \
+              --region ${{ env.REGION }} \
+              --quiet
+            echo "✓ Cloud Run service deleted"
+          else
+            echo "Cloud Run service ${{ env.SERVICE_NAME }} does not exist"
+          fi
+
+      - name: Delete Docker images from Artifact Registry
+        run: |
+          if gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
+              --location=${{ env.REGION }} 2>/dev/null; then
+            echo "Deleting all images in repository: ${{ env.REPOSITORY }}"
+
+            # リポジトリ内のすべてのイメージを取得して削除
+            IMAGES=$(gcloud artifacts docker images list \
+              ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }} \
+              --format="value(package)" 2>/dev/null || echo "")
+
+            if [ -n "$IMAGES" ]; then
+              for IMAGE in $IMAGES; do
+                echo "Deleting image: $IMAGE"
+                gcloud artifacts docker images delete \
+                  ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$IMAGE \
+                  --delete-tags \
+                  --quiet 2>/dev/null || echo "Failed to delete $IMAGE (may not exist)"
+              done
+            fi
+
+            echo "✓ Docker images deleted"
+          else
+            echo "Artifact Registry repository ${{ env.REPOSITORY }} does not exist"
+          fi
+
+      - name: Delete Artifact Registry repository
+        run: |
+          if gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
+              --location=${{ env.REGION }} 2>/dev/null; then
+            echo "Deleting Artifact Registry repository: ${{ env.REPOSITORY }}"
+            gcloud artifacts repositories delete ${{ env.REPOSITORY }} \
+              --location=${{ env.REGION }} \
+              --quiet
+            echo "✓ Artifact Registry repository deleted"
+          else
+            echo "Artifact Registry repository ${{ env.REPOSITORY }} does not exist"
+          fi
+
+      - name: Delete Secret Manager secret
+        run: |
+          if gcloud secrets describe anthropic-api-key 2>/dev/null; then
+            echo "Deleting Secret Manager secret: anthropic-api-key"
+            gcloud secrets delete anthropic-api-key --quiet
+            echo "✓ Secret Manager secret deleted"
+          else
+            echo "Secret Manager secret anthropic-api-key does not exist"
+          fi
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "=== Deletion Summary ==="
+          echo "✓ All Google Cloud resources have been deleted:"
+          echo "  - Cloud Run service: ${{ env.SERVICE_NAME }}"
+          echo "  - Artifact Registry repository: ${{ env.REPOSITORY }}"
+          echo "  - Docker images in repository"
+          echo "  - Secret Manager secret: anthropic-api-key"
+          echo ""
+          echo "Note: Workload Identity Federation resources are NOT deleted."
+          echo "If you want to delete them too, run:"
+          echo "  ./scripts/cleanup-github-actions.sh"
