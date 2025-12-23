@@ -1,4 +1,5 @@
 import type { Message as MessageType } from '../types/index';
+import MessageContent from './MessageContent';
 
 interface MessageProps {
   message: MessageType;
@@ -10,7 +11,15 @@ export default function Message({ message }: MessageProps) {
   return (
     <div className={`message ${isUser ? 'user-message' : 'assistant-message'}`}>
       <div className="message-role">{isUser ? 'You' : 'AI'}</div>
-      <div className="message-content">{message.content}</div>
+      <div className="message-content">
+        {isUser ? (
+          // ユーザーメッセージはプレーンテキスト表示
+          message.content
+        ) : (
+          // AIメッセージはマークダウンレンダリング
+          <MessageContent content={message.content} />
+        )}
+      </div>
     </div>
   );
 }

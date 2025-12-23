@@ -375,3 +375,240 @@
 .message-list::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
+
+/* Markdown Content Styles */
+.markdown-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+.markdown-content h1 {
+  font-size: 1.8em;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h3 {
+  font-size: 1.3em;
+}
+
+.markdown-content h4 {
+  font-size: 1.1em;
+}
+
+.markdown-content h5,
+.markdown-content h6 {
+  font-size: 1em;
+}
+
+.markdown-content p {
+  margin-bottom: 1em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.75em 0;
+  padding-left: 2em;
+}
+
+.markdown-content li {
+  margin: 0.25em 0;
+}
+
+.markdown-content blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #ddd;
+  background: #f9f9f9;
+  color: #666;
+}
+
+.markdown-content table {
+  margin: 1em 0;
+  border-collapse: collapse;
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: #f5f5f5;
+  font-weight: bold;
+}
+
+.markdown-content tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.markdown-content a {
+  color: #667eea;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.markdown-content a:hover {
+  border-bottom-color: #667eea;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 0.5em 0;
+}
+
+.markdown-content hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 1px solid #ddd;
+}
+
+/* Inline Code */
+.markdown-content .inline-code {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  color: #e83e8c;
+}
+
+/* Code Block Wrapper */
+.code-block-wrapper {
+  margin: 1em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #282c34;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #21252b;
+  border-bottom: 1px solid #181a1f;
+}
+
+.code-language {
+  font-size: 12px;
+  color: #abb2bf;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.code-copy-button {
+  padding: 4px 12px;
+  background: #3e4451;
+  color: #abb2bf;
+  border: 1px solid #4b5263;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.code-copy-button:hover {
+  background: #4b5263;
+  color: #fff;
+}
+
+.code-copy-button:active {
+  background: #2c313c;
+}
+
+/* Light mode code block */
+@media (prefers-color-scheme: light) {
+  .code-block-wrapper {
+    background: #fafafa;
+  }
+
+  .code-block-header {
+    background: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .code-language {
+    color: #666;
+  }
+
+  .code-copy-button {
+    background: #e0e0e0;
+    color: #666;
+    border: 1px solid #ccc;
+  }
+
+  .code-copy-button:hover {
+    background: #d0d0d0;
+    color: #333;
+  }
+}
+
+/* Math (KaTeX) Styles */
+.markdown-content .katex {
+  font-size: 1.1em;
+}
+
+.markdown-content .katex-display {
+  margin: 1em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Mermaid Diagram Styles */
+.markdown-content .mermaid {
+  margin: 1em 0;
+  text-align: center;
+  background: #fff;
+  padding: 1em;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .markdown-content {
+    font-size: 13px;
+  }
+
+  .markdown-content table {
+    font-size: 12px;
+  }
+
+  .code-block-header {
+    padding: 6px 10px;
+  }
+
+  .code-language,
+  .code-copy-button {
+    font-size: 11px;
+  }
+}
